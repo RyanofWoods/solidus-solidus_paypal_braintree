@@ -21,6 +21,43 @@ RSpec.describe SolidusPaypalBraintree::Address do
     end
   end
 
+  describe "#fullname" do
+    subject { described_class.new(address).fullname }
+
+    let(:address) { instance_double('address', name: name) }
+
+    context 'when Solidus combines names but Spree::Address::Name is not defined' do
+      before do
+        allow(SolidusSupport).to receive(:combined_first_and_last_name_in_address?).and_return(true)
+        allow(described_class).to receive(:defined?).with(Spree::Address::Name).and_return(false)
+      end
+
+      context 'with a one word name' do
+        let(:name) { 'Bruce' }
+
+        it 'equals "Bruce"' do
+          expect(subject).to eq('Bruce')
+        end
+      end
+
+      context 'with a one word name but extra right padding' do
+        let(:name) { 'Bruce ' }
+
+        it 'equals "Bruce"' do
+          expect(subject).to eq('Bruce')
+        end
+      end
+
+      context "with a two word name" do
+        let(:name) { 'Bruce Wayne' }
+
+        it 'equals "Bruce Wayne"' do
+          expect(subject).to eq('Bruce Wayne')
+        end
+      end
+    end
+  end
+
   describe '#to_json' do
     subject(:address_json) { JSON.parse(described_class.new(spree_address).to_json) }
 

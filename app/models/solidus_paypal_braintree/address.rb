@@ -32,13 +32,17 @@ module SolidusPaypalBraintree
         postalCode: zipcode,
         countryCode: country.iso,
         phone: phone,
-        recipientName: "#{firstname} #{lastname}"
+        recipientName: fullname
       }
 
       if ::Spree::Config.address_requires_state && country.states_required
         address_hash[:state] = state.name
       end
       address_hash.to_json
+    end
+
+    def fullname
+      [firstname, lastname].select(&:present?).join(' ')
     end
 
     def firstname
@@ -51,7 +55,8 @@ module SolidusPaypalBraintree
 
     def lastname
       if SolidusSupport.combined_first_and_last_name_in_address?
-        self.class.split_name(spree_address.name).last
+        split_names = self.class.split_name(spree_address.name)
+        split_names.size == 2 ? split_names.last : ''
       else
         spree_address.lastname
       end
